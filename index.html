@@ -39,7 +39,7 @@
         <div>
           <h1 class="font-bold text-lg leading-tight flex items-center gap-2">
             中转站资产管理看板
-            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal">Edge 书签已全量导入</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 font-semibold">真实链接已核验</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400">分清主力·盘活残额·排查死站·一键回帖</p>
         </div>
@@ -49,6 +49,10 @@
         <button onclick="openNewModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">
           <i data-lucide="plus" class="w-4 h-4"></i>
           <span>记一笔新站点</span>
+        </button>
+        <button onclick="reloadCleanData()" class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition border border-slate-200 dark:border-slate-700" title="重新从 rewards_data.json 加载纯净数据">
+          <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+          <span>重载数据</span>
         </button>
         <button onclick="exportJSON()" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="导出数据备份">
           <i data-lucide="download" class="w-4 h-4"></i>
@@ -160,12 +164,12 @@
 
   </main>
 
-  <!-- 填写 UID / 回帖 Modal 弹窗 -->
+  <!-- 填写 UID / 回帖登记 Modal 弹窗 -->
   <div id="claimModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
       <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
         <h3 class="font-bold text-base flex items-center gap-2">
-          <span>✍️ 填写 UID / 回帖登记</span>
+          <span>✍️ 登记 UID & 补充控制台</span>
         </h3>
         <button onclick="closeClaimModal()" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
@@ -182,6 +186,11 @@
         </div>
 
         <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">实际控制台/官网网址 (可选)</label>
+          <input type="url" id="modalSiteUrlInput" placeholder="https://... (填入后将生成直接跳转按钮)" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+        </div>
+
+        <div>
           <label class="block text-xs font-semibold text-slate-400 mb-1">备注说明 (可选)</label>
           <input type="text" id="modalNotesInput" placeholder="例如：Claude 0.25x / 送 5 刀" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
         </div>
@@ -190,6 +199,56 @@
       <div class="flex items-center justify-end gap-2 pt-2">
         <button onclick="closeClaimModal()" class="px-3.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">取消</button>
         <button onclick="submitClaim()" class="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm">保存并标记为备用</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑完整信息 Modal 弹窗 -->
+  <div id="editModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
+        <h3 class="font-bold text-base">✏️ 编辑站点信息</h3>
+        <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">站点名称 *</label>
+          <input type="text" id="editSiteName" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">控制台/官网网址 (留空则不显示控制台按钮)</label>
+          <input type="url" id="editSiteUrl" placeholder="https://..." class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">原帖网址 (LINUX DO 话题链接)</label>
+          <input type="url" id="editTopicUrl" placeholder="https://linux.do/t/topic/..." class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">状态分类</label>
+          <select id="editStatus" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+            <option value="ACTIVE">🟢 主力在用 (有钱/好用)</option>
+            <option value="STANDBY">🟡 备用有钱 (有残额/工具)</option>
+            <option value="PENDING">🔴 待领羊毛 (福利帖)</option>
+            <option value="ARCHIVED">⚫ 难用废弃</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">我的 UID</label>
+          <input type="text" id="editUid" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">备注/残余额度</label>
+          <input type="text" id="editNotes" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <button onclick="deleteCurrentItem()" class="text-xs text-rose-500 hover:text-rose-700">删除此站点</button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeEditModal()" class="px-3.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">取消</button>
+          <button onclick="saveEditRecord()" class="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm">保存修改</button>
+        </div>
       </div>
     </div>
   </div>
@@ -205,18 +264,22 @@
       <div class="space-y-3 text-xs">
         <div>
           <label class="block font-semibold text-slate-400 mb-1">站点名称 *</label>
-          <input type="text" id="newSiteName" placeholder="例如：元流 / AllRouter" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+          <input type="text" id="newSiteName" placeholder="例如：元流 / SevenAI" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
         </div>
         <div>
-          <label class="block font-semibold text-slate-400 mb-1">控制台/官网网址</label>
+          <label class="block font-semibold text-slate-400 mb-1">控制台/官网网址 (可选)</label>
           <input type="url" id="newSiteUrl" placeholder="https://..." class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-400 mb-1">原帖网址 (可选)</label>
+          <input type="url" id="newTopicUrl" placeholder="https://linux.do/t/topic/..." class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
         </div>
         <div>
           <label class="block font-semibold text-slate-400 mb-1">状态分类</label>
           <select id="newStatus" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
             <option value="ACTIVE">🟢 主力在用 (有钱/好用)</option>
-            <option value="STANDBY">🟡 备用有钱 (有残额)</option>
-            <option value="PENDING">🔴 待领福利 (线报)</option>
+            <option value="STANDBY">🟡 备用有钱 (有残额/工具)</option>
+            <option value="PENDING">🔴 待领羊毛 (线报)</option>
             <option value="ARCHIVED">⚫ 难用废弃</option>
           </select>
         </div>
@@ -234,49 +297,53 @@
   </div>
 
   <script>
+    const STORAGE_KEY = 'linuxdo_rewards_data_v3';
     let currentTab = 'ALL';
     let rewards = [];
     let activeTopicId = null;
+    let editItemId = null;
 
     const STATUS_INFO = {
       ACTIVE:   { label: '🟢 主力在用', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800' },
       STANDBY:  { label: '🟡 备用有钱', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 border-amber-300 dark:border-amber-800' },
-      PENDING:  { label: '🔴 待领福利', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-400 border-rose-300 dark:border-rose-800' },
-      SUBMITTED:{ label: '📋 审核中',   badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' },
+      PENDING:  { label: '🔴 待领羊毛', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-400 border-rose-300 dark:border-rose-800' },
       ARCHIVED: { label: '⚫ 难用废弃', badge: 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-300 dark:border-slate-700' }
     };
 
     async function initData() {
+      // 检查本地缓存
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          rewards = JSON.parse(stored);
+        } catch(e) {
+          rewards = [];
+        }
+      }
+      
+      // 若无缓存或缓存空，从 rewards_data.json 加载
+      if (!rewards || rewards.length === 0) {
+        await reloadCleanData();
+      } else {
+        renderAll();
+      }
+    }
+
+    async function reloadCleanData() {
       try {
-        const resp = await fetch('rewards_data.json');
+        const resp = await fetch('rewards_data.json?t=' + Date.now());
         if (resp.ok) {
           rewards = await resp.json();
-          localStorage.setItem('linuxdo_rewards_data_v2', JSON.stringify(rewards));
-        } else {
-          loadLocal();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(rewards));
         }
       } catch (e) {
-        loadLocal();
+        console.error('加载纯净数据失败', e);
       }
       renderAll();
     }
 
-    function loadLocal() {
-      const stored = localStorage.getItem('linuxdo_rewards_data_v2');
-      if (stored) {
-        try { rewards = JSON.parse(stored); } catch(e) { rewards = []; }
-      }
-    }
-
     function persist() {
-      localStorage.setItem('linuxdo_rewards_data_v2', JSON.stringify(rewards));
-      try {
-        fetch('/api/rewards/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(rewards)
-        }).catch(() => {});
-      } catch(e){}
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rewards));
       renderAll();
     }
 
@@ -291,7 +358,7 @@
       document.getElementById('stat-total').innerText = rewards.length;
       document.getElementById('stat-active').innerText = rewards.filter(x => x.status === 'ACTIVE').length;
       document.getElementById('stat-standby').innerText = rewards.filter(x => x.status === 'STANDBY').length;
-      document.getElementById('stat-pending').innerText = rewards.filter(x => x.status === 'PENDING' || x.status === 'SUBMITTED').length;
+      document.getElementById('stat-pending').innerText = rewards.filter(x => x.status === 'PENDING').length;
       document.getElementById('stat-archived').innerText = rewards.filter(x => x.status === 'ARCHIVED').length;
     }
 
@@ -311,6 +378,16 @@
           btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200';
         }
       });
+    }
+
+    function getDomain(url) {
+      if (!url) return '';
+      try {
+        const u = new URL(url);
+        return u.hostname;
+      } catch(e) {
+        return url.replace('https://', '').replace('http://', '').split('/')[0];
+      }
     }
 
     function renderCards() {
@@ -356,7 +433,21 @@
       container.innerHTML = list.map(item => {
         const st = STATUS_INFO[item.status] || STATUS_INFO.STANDBY;
         const isConsole = (item.item_type || 'CONSOLE') === 'CONSOLE';
-        const jumpUrl = item.site_url || item.topic_url || '#';
+        const hasSite = Boolean(item.site_url && item.site_url.trim());
+        const hasTopic = Boolean(item.topic_url && item.topic_url.trim());
+
+        // 计算展示副标题
+        let subtitleText = '';
+        let subtitleLink = '#';
+        if (hasSite) {
+          subtitleText = '🌐 ' + getDomain(item.site_url);
+          subtitleLink = item.site_url;
+        } else if (hasTopic) {
+          subtitleText = '💬 LINUX DO 福利原帖';
+          subtitleLink = item.topic_url;
+        } else {
+          subtitleText = '📝 自定义记录';
+        }
 
         return `
           <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-3">
@@ -364,52 +455,55 @@
               <div class="flex items-start justify-between gap-2 mb-1.5">
                 <div class="min-w-0">
                   <h3 class="font-bold text-sm truncate hover:text-emerald-500 transition" title="${item.full_name || item.site_name}">
-                    ${isConsole ? '🖥️ ' : '🎁 '}${item.site_name}
+                    ${hasSite ? '🖥️ ' : '🎁 '}${item.site_name}
                   </h3>
-                  <div class="text-[11px] text-slate-400 truncate mt-0.5" title="${jumpUrl}">
-                    ${jumpUrl.replace('https://', '').replace('http://', '')}
-                  </div>
+                  <a href="${subtitleLink}" target="_blank" class="text-[11px] text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 truncate mt-0.5 block" title="${subtitleLink}">
+                    ${subtitleText}
+                  </a>
                 </div>
 
                 <!-- 状态选择下拉框 -->
                 <select onchange="changeStatus('${item.id || item.topic_id}', this.value)" class="text-[11px] font-semibold px-2 py-0.5 rounded-full border outline-none cursor-pointer ${st.badge}">
-                  <option value="ACTIVE" ${item.status === 'ACTIVE' ? 'selected' : ''}>🟢 主力在用</option>
-                  <option value="STANDBY" ${item.status === 'STANDBY' ? 'selected' : ''}>🟡 备用有钱</option>
-                  <option value="PENDING" ${item.status === 'PENDING' ? 'selected' : ''}>🔴 待领福利</option>
-                  <option value="ARCHIVED" ${item.status === 'ARCHIVED' ? 'selected' : ''}>⚫ 难用废弃</option>
+                  <option value="ACTIVE" ${item.status === 'ACTIVE' ? 'selected' : ''}>🟢 主力</option>
+                  <option value="STANDBY" ${item.status === 'STANDBY' ? 'selected' : ''}>🟡 备用</option>
+                  <option value="PENDING" ${item.status === 'PENDING' ? 'selected' : ''}>🔴 待领</option>
+                  <option value="ARCHIVED" ${item.status === 'ARCHIVED' ? 'selected' : ''}>⚫ 废弃</option>
                 </select>
               </div>
 
               <!-- 备注与福利说明 -->
               <div class="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl my-2 border border-slate-100 dark:border-slate-800 text-xs space-y-1">
-                ${item.reward_desc ? `<div class="font-medium text-slate-700 dark:text-slate-300 truncate">${item.reward_desc}</div>` : ''}
+                ${item.reward_desc ? `<div class="font-medium text-emerald-600 dark:text-emerald-400 truncate">🎁 ${item.reward_desc}</div>` : ''}
                 ${item.notes ? `<div class="text-slate-400 text-[11px] truncate">📌 备注：${item.notes}</div>` : ''}
-                ${item.my_uid ? `<div class="text-[11px] text-emerald-600 font-mono">UID: ${item.my_uid}</div>` : ''}
+                ${item.my_uid ? `<div class="text-[11px] text-indigo-600 dark:text-indigo-400 font-mono">🔑 UID: ${item.my_uid}</div>` : ''}
               </div>
             </div>
 
             <!-- 操作按钮 -->
             <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-              <div class="flex items-center gap-1.5">
-                ${item.site_url ? `
-                  <a href="${item.site_url}" target="_blank" class="px-2.5 py-1 rounded-lg font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <!-- 控制台按钮：只有当有真实 site_url 时才展示 -->
+                ${hasSite ? `
+                  <a href="${item.site_url}" target="_blank" class="px-2.5 py-1 rounded-lg font-medium bg-slate-900 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 hover:bg-slate-800 transition flex items-center gap-1">
                     <i data-lucide="external-link" class="w-3 h-3"></i> 进入控制台
                   </a>
                 ` : ''}
-                ${item.topic_url ? `
-                  <a href="${item.topic_url}" target="_blank" class="px-2.5 py-1 rounded-lg font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1">
-                    <i data-lucide="message-square" class="w-3 h-3"></i> 原帖
+
+                <!-- 原帖按钮：若无控制台，则作为主入口突出展示 -->
+                ${hasTopic ? `
+                  <a href="${item.topic_url}" target="_blank" class="px-2.5 py-1 rounded-lg font-medium ${!hasSite ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'} transition flex items-center gap-1">
+                    <i data-lucide="message-square" class="w-3 h-3"></i> ${!hasSite ? '查看原帖找官网' : '原帖'}
                   </a>
                 ` : ''}
               </div>
 
               <div class="flex items-center gap-1">
-                ${(item.status === 'PENDING' || !isConsole) ? `
-                  <button onclick="openClaim('${item.id || item.topic_id}')" class="px-2.5 py-1 rounded-lg font-medium bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-900 hover:bg-rose-100 transition flex items-center gap-1">
+                ${(!hasSite || item.status === 'PENDING') ? `
+                  <button onclick="openClaim('${item.id || item.topic_id}')" class="px-2 py-1 rounded-lg font-medium bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-900 hover:bg-rose-100 transition flex items-center gap-1" title="登记UID并补充官网网址">
                     <i data-lucide="pen-tool" class="w-3 h-3"></i> 记UID
                   </button>
                 ` : ''}
-                <button onclick="editNote('${item.id || item.topic_id}')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="修改备注/余额">
+                <button onclick="openEditModal('${item.id || item.topic_id}')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="完整修改信息">
                   <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                 </button>
               </div>
@@ -428,22 +522,13 @@
       }
     }
 
-    function editNote(id) {
-      const item = rewards.find(x => (x.id || x.topic_id) === id);
-      if (!item) return;
-      const newNote = prompt(`修改 [${item.site_name}] 的备注或剩余额度：`, item.notes || '');
-      if (newNote !== null) {
-        item.notes = newNote.trim();
-        persist();
-      }
-    }
-
     function openClaim(id) {
       activeTopicId = id;
       const item = rewards.find(x => (x.id || x.topic_id) === id);
       if (!item) return;
-      document.getElementById('modalSiteName').innerText = `${item.site_name} (${item.reward_desc})`;
+      document.getElementById('modalSiteName').innerText = `${item.site_name} ${item.reward_desc ? ' · ' + item.reward_desc : ''}`;
       document.getElementById('modalUidInput').value = item.my_uid || '';
+      document.getElementById('modalSiteUrlInput').value = item.site_url || '';
       document.getElementById('modalNotesInput').value = item.notes || '';
       document.getElementById('claimModal').classList.remove('hidden');
     }
@@ -455,15 +540,61 @@
 
     function submitClaim() {
       const uid = document.getElementById('modalUidInput').value.trim();
+      const siteUrl = document.getElementById('modalSiteUrlInput').value.trim();
       const notes = document.getElementById('modalNotesInput').value.trim();
       const item = rewards.find(x => (x.id || x.topic_id) === activeTopicId);
       if (item) {
         item.my_uid = uid;
+        if (siteUrl) {
+          item.site_url = siteUrl;
+          item.item_type = 'CONSOLE';
+        }
         if (notes) item.notes = notes;
         item.status = 'STANDBY';
         persist();
       }
       closeClaimModal();
+    }
+
+    function openEditModal(id) {
+      editItemId = id;
+      const item = rewards.find(x => (x.id || x.topic_id) === id);
+      if (!item) return;
+      document.getElementById('editSiteName').value = item.site_name || '';
+      document.getElementById('editSiteUrl').value = item.site_url || '';
+      document.getElementById('editTopicUrl').value = item.topic_url || '';
+      document.getElementById('editStatus').value = item.status || 'STANDBY';
+      document.getElementById('editUid').value = item.my_uid || '';
+      document.getElementById('editNotes').value = item.notes || '';
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+      editItemId = null;
+    }
+
+    function saveEditRecord() {
+      const item = rewards.find(x => (x.id || x.topic_id) === editItemId);
+      if (!item) return;
+      const name = document.getElementById('editSiteName').value.trim();
+      if (!name) { alert('站点名称必填！'); return; }
+      item.site_name = name;
+      item.site_url = document.getElementById('editSiteUrl').value.trim();
+      item.topic_url = document.getElementById('editTopicUrl').value.trim();
+      item.status = document.getElementById('editStatus').value;
+      item.my_uid = document.getElementById('editUid').value.trim();
+      item.notes = document.getElementById('editNotes').value.trim();
+      if (item.site_url) item.item_type = 'CONSOLE';
+      persist();
+      closeEditModal();
+    }
+
+    function deleteCurrentItem() {
+      if (!confirm('确定要从看板中删除此站点吗？')) return;
+      rewards = rewards.filter(x => (x.id || x.topic_id) !== editItemId);
+      persist();
+      closeEditModal();
     }
 
     function openNewModal() { document.getElementById('newModal').classList.remove('hidden'); }
@@ -472,23 +603,25 @@
     function saveNewRecord() {
       const name = document.getElementById('newSiteName').value.trim();
       const siteUrl = document.getElementById('newSiteUrl').value.trim();
+      const topicUrl = document.getElementById('newTopicUrl').value.trim();
       const status = document.getElementById('newStatus').value;
       const notes = document.getElementById('newNotes').value.trim();
 
       if (!name) { alert('站点名称必填！'); return; }
 
       rewards.unshift({
-        id: Date.now().toString(),
+        id: String(Date.now()),
+        topic_id: '',
         site_name: name,
         full_name: name,
         site_url: siteUrl,
-        topic_url: '',
-        item_type: 'CONSOLE',
-        reward_desc: '自定义中转站',
+        topic_url: topicUrl,
+        item_type: siteUrl ? 'CONSOLE' : 'DEAL',
         status: status,
         my_uid: '',
+        reward_desc: '',
         notes: notes,
-        created_at: new Date().toLocaleString()
+        updated_at: new Date().toISOString()
       });
 
       persist();
@@ -497,9 +630,10 @@
 
     function exportJSON() {
       const blob = new Blob([JSON.stringify(rewards, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `my_api_sites_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.href = url;
+      a.download = `linuxdo_rewards_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
     }
 
@@ -507,6 +641,7 @@
       document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
     }
+
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     }
