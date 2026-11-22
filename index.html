@@ -63,8 +63,8 @@
 
   <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- 5 维状态 KPI 统计卡片区 -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <!-- 4 维核心状态 KPI 统计卡片区 -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
       <!-- 1. 全部 -->
       <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-slate-400 transition" onclick="setTab('ALL')">
         <div class="flex items-center justify-between mb-1">
@@ -101,16 +101,7 @@
         <div id="stat-pending" class="text-2xl font-bold text-rose-600 dark:text-rose-400">0</div>
       </div>
 
-      <!-- 5. 额度耗尽 -->
-      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-orange-500 transition" onclick="setTab('DEPLETED')">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-xs text-orange-600 dark:text-orange-400 font-semibold">🟠 额度耗尽</span>
-          <i data-lucide="battery-low" class="w-4 h-4 text-orange-500"></i>
-        </div>
-        <div id="stat-depleted" class="text-2xl font-bold text-orange-600 dark:text-orange-400">0</div>
-      </div>
-
-      <!-- 6. 难用废弃 -->
+      <!-- 5. 难用废弃 -->
       <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-slate-500 transition" onclick="setTab('ARCHIVED')">
         <div class="flex items-center justify-between mb-1">
           <span class="text-xs text-slate-400 font-semibold">⚫ 难用/废弃</span>
@@ -129,7 +120,6 @@
         <button onclick="setTab('ACTIVE')" id="tab-ACTIVE" class="tab-btn px-3 py-1.5 rounded-lg transition">🟢 主力</button>
         <button onclick="setTab('STANDBY')" id="tab-STANDBY" class="tab-btn px-3 py-1.5 rounded-lg transition">🟡 备用</button>
         <button onclick="setTab('PENDING')" id="tab-PENDING" class="tab-btn px-3 py-1.5 rounded-lg transition">🔴 待领</button>
-        <button onclick="setTab('DEPLETED')" id="tab-DEPLETED" class="tab-btn px-3 py-1.5 rounded-lg transition">🟠 没钱</button>
         <button onclick="setTab('ARCHIVED')" id="tab-ARCHIVED" class="tab-btn px-3 py-1.5 rounded-lg transition">⚫ 废弃</button>
       </div>
 
@@ -199,7 +189,7 @@
 
       <div class="flex items-center justify-end gap-2 pt-2">
         <button onclick="closeClaimModal()" class="px-3.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">取消</button>
-        <button onclick="submitClaim()" class="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm">保存并标记为待到账</button>
+        <button onclick="submitClaim()" class="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm">保存并标记为备用</button>
       </div>
     </div>
   </div>
@@ -227,7 +217,6 @@
             <option value="ACTIVE">🟢 主力在用 (有钱/好用)</option>
             <option value="STANDBY">🟡 备用有钱 (有残额)</option>
             <option value="PENDING">🔴 待领福利 (线报)</option>
-            <option value="DEPLETED">🟠 额度耗尽 (没钱了)</option>
             <option value="ARCHIVED">⚫ 难用废弃</option>
           </select>
         </div>
@@ -254,7 +243,6 @@
       STANDBY:  { label: '🟡 备用有钱', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 border-amber-300 dark:border-amber-800' },
       PENDING:  { label: '🔴 待领福利', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-400 border-rose-300 dark:border-rose-800' },
       SUBMITTED:{ label: '📋 审核中',   badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' },
-      DEPLETED: { label: '🟠 额度耗尽', badge: 'bg-orange-100 text-orange-700 dark:bg-orange-950/80 dark:text-orange-400 border-orange-300 dark:border-orange-800' },
       ARCHIVED: { label: '⚫ 难用废弃', badge: 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-300 dark:border-slate-700' }
     };
 
@@ -304,7 +292,6 @@
       document.getElementById('stat-active').innerText = rewards.filter(x => x.status === 'ACTIVE').length;
       document.getElementById('stat-standby').innerText = rewards.filter(x => x.status === 'STANDBY').length;
       document.getElementById('stat-pending').innerText = rewards.filter(x => x.status === 'PENDING' || x.status === 'SUBMITTED').length;
-      document.getElementById('stat-depleted').innerText = rewards.filter(x => x.status === 'DEPLETED').length;
       document.getElementById('stat-archived').innerText = rewards.filter(x => x.status === 'ARCHIVED').length;
     }
 
@@ -315,7 +302,7 @@
     }
 
     function updateTabButtons() {
-      const tabs = ['ALL', 'ACTIVE', 'STANDBY', 'PENDING', 'DEPLETED', 'ARCHIVED'];
+      const tabs = ['ALL', 'ACTIVE', 'STANDBY', 'PENDING', 'ARCHIVED'];
       tabs.forEach(t => {
         const btn = document.getElementById('tab-' + t);
         if (currentTab === t) {
@@ -340,7 +327,6 @@
       if (currentTab !== 'ALL') {
         list = list.filter(x => x.status === currentTab);
       } else if (hideArchived) {
-        // 全选模式下若勾选隐藏废弃站，则过滤掉 ARCHIVED
         list = list.filter(x => x.status !== 'ARCHIVED');
       }
 
@@ -390,7 +376,6 @@
                   <option value="ACTIVE" ${item.status === 'ACTIVE' ? 'selected' : ''}>🟢 主力在用</option>
                   <option value="STANDBY" ${item.status === 'STANDBY' ? 'selected' : ''}>🟡 备用有钱</option>
                   <option value="PENDING" ${item.status === 'PENDING' ? 'selected' : ''}>🔴 待领福利</option>
-                  <option value="DEPLETED" ${item.status === 'DEPLETED' ? 'selected' : ''}>🟠 额度耗尽</option>
                   <option value="ARCHIVED" ${item.status === 'ARCHIVED' ? 'selected' : ''}>⚫ 难用废弃</option>
                 </select>
               </div>
@@ -435,7 +420,6 @@
       lucide.createIcons();
     }
 
-    // 状态切换
     function changeStatus(id, newStatus) {
       const item = rewards.find(x => (x.id || x.topic_id) === id);
       if (item) {
@@ -444,7 +428,6 @@
       }
     }
 
-    // 快速修改备注
     function editNote(id) {
       const item = rewards.find(x => (x.id || x.topic_id) === id);
       if (!item) return;
@@ -455,7 +438,6 @@
       }
     }
 
-    // Modal 控制
     function openClaim(id) {
       activeTopicId = id;
       const item = rewards.find(x => (x.id || x.topic_id) === id);
@@ -478,13 +460,12 @@
       if (item) {
         item.my_uid = uid;
         if (notes) item.notes = notes;
-        item.status = 'STANDBY'; // 登记后变为备用有钱
+        item.status = 'STANDBY';
         persist();
       }
       closeClaimModal();
     }
 
-    // 新增站点
     function openNewModal() { document.getElementById('newModal').classList.remove('hidden'); }
     function closeNewModal() { document.getElementById('newModal').classList.add('hidden'); }
 
@@ -514,7 +495,6 @@
       closeNewModal();
     }
 
-    // 导出备份
     function exportJSON() {
       const blob = new Blob([JSON.stringify(rewards, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
@@ -523,7 +503,6 @@
       a.click();
     }
 
-    // 暗黑模式
     function toggleDarkMode() {
       document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');

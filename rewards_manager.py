@@ -10,7 +10,6 @@ STATUS_ACTIVE = "ACTIVE"        # 🟢 主力在用
 STATUS_STANDBY = "STANDBY"      # 🟡 备用有钱
 STATUS_PENDING = "PENDING"      # 🔴 待领福利
 STATUS_SUBMITTED = "SUBMITTED"  # 📋 审核中
-STATUS_DEPLETED = "DEPLETED"    # 🟠 额度耗尽
 STATUS_ARCHIVED = "ARCHIVED"    # ⚫ 难用废弃
 
 def load_data():
@@ -23,6 +22,10 @@ def load_data():
             return []
 
 def save_data(data):
+    # 将旧的 DEPLETED 统一归并为 ARCHIVED 或 STANDBY
+    for x in data:
+        if x.get("status") == "DEPLETED":
+            x["status"] = STATUS_ARCHIVED
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     render_markdown(data)
@@ -31,14 +34,13 @@ def render_markdown(data):
     active = [x for x in data if x.get("status") == STATUS_ACTIVE]
     standby = [x for x in data if x.get("status") == STATUS_STANDBY]
     pending = [x for x in data if x.get("status") in [STATUS_PENDING, STATUS_SUBMITTED]]
-    depleted = [x for x in data if x.get("status") == STATUS_DEPLETED]
-    archived = [x for x in data if x.get("status") == STATUS_ARCHIVED]
+    archived = [x for x in data if x.get("status") in [STATUS_ARCHIVED, "DEPLETED"]]
 
     lines = [
         "# ⚡ 中转站资产全景大清查看板",
         "",
         f"> **更新时间**：`{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}`  ",
-        f"> **统计概览**：总收录 `{len(data)}` 个站点 ｜ 🟢 主力在用: `{len(active)}` ｜ 🟡 备用有钱: `{len(standby)}` ｜ 🔴 待领福利: `{len(pending)}` ｜ 🟠 额度耗尽: `{len(depleted)}` ｜ ⚫ 废弃隐藏: `{len(archived)}`",
+        f"> **统计概览**：总收录 `{len(data)}` 个站点 ｜ 🟢 主力在用: `{len(active)}` ｜ 🟡 备用有钱: `{len(standby)}` ｜ 🔴 待领福利: `{len(pending)}` ｜ ⚫ 废弃隐藏: `{len(archived)}`",
         "",
         "---",
         "",
@@ -84,25 +86,10 @@ def render_markdown(data):
         uid = f"`{item.get('my_uid')}`" if item.get('my_uid') else "未留"
         lines.append(f"| **{name}** | {reward} | {link} | {uid} |")
 
-    lines.extend([
-        "",
-        "## 🟠 额度耗尽 (好用但暂时用光了)",
-        "",
-        "| 站点名称 | 网址 | 备注 |",
-        "| :--- | :--- | :--- |",
-    ])
-    if not depleted:
-        lines.append("| - | 暂无额度耗尽站点 | - |")
-    else:
-        for item in depleted:
-            name = item.get("site_name", "-")
-            url = item.get("site_url", "")
-            lines.append(f"| {name} | {url} | {item.get('notes', '-')} |")
-
     lines.append("")
     with open(BOARD_FILE, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print(f"[OK] 看板已保存到 {BOARD_FILE}")
 
 if __name__ == "__main__":
-    render_markdown(load_data())
+    save_data(load_data())
