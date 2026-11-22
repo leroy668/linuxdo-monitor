@@ -6,17 +6,12 @@ from datetime import datetime
 DATA_FILE = "rewards_data.json"
 BOARD_FILE = "API_REWARDS.md"
 
-STATUS_PENDING = "PENDING"      # 🔴 待领取 (未留UID)
-STATUS_SUBMITTED = "SUBMITTED"  # 🟡 待到账 (已回帖留UID)
-STATUS_CLAIMED = "CLAIMED"      # 🟢 已到账 (额度已就绪)
-STATUS_EXPIRED = "EXPIRED"      # ⚪ 已失效 (活动结束)
-
-STATUS_MAP = {
-    STATUS_PENDING: ("🔴 待领取", "新线报，尚未注册或尚未留 UID"),
-    STATUS_SUBMITTED: ("🟡 待到账", "已回帖留 UID，等待站长加额度"),
-    STATUS_CLAIMED: ("🟢 已到账", "额度已到账，可正常使用"),
-    STATUS_EXPIRED: ("⚪ 已失效", "活动名额已满或已过期"),
-}
+STATUS_ACTIVE = "ACTIVE"        # 🟢 主力在用
+STATUS_STANDBY = "STANDBY"      # 🟡 备用有钱
+STATUS_PENDING = "PENDING"      # 🔴 待领福利
+STATUS_SUBMITTED = "SUBMITTED"  # 📋 审核中
+STATUS_DEPLETED = "DEPLETED"    # 🟠 额度耗尽
+STATUS_ARCHIVED = "ARCHIVED"    # ⚫ 难用废弃
 
 def load_data():
     if not os.path.exists(DATA_FILE):
@@ -33,151 +28,81 @@ def save_data(data):
     render_markdown(data)
 
 def render_markdown(data):
-    """自动将 JSON 数据渲染为美观直观的 Markdown 看板"""
-    pending = [x for x in data if x.get("status") == STATUS_PENDING]
-    submitted = [x for x in data if x.get("status") == STATUS_SUBMITTED]
-    claimed = [x for x in data if x.get("status") == STATUS_CLAIMED]
-    expired = [x for x in data if x.get("status") == STATUS_EXPIRED]
+    active = [x for x in data if x.get("status") == STATUS_ACTIVE]
+    standby = [x for x in data if x.get("status") == STATUS_STANDBY]
+    pending = [x for x in data if x.get("status") in [STATUS_PENDING, STATUS_SUBMITTED]]
+    depleted = [x for x in data if x.get("status") == STATUS_DEPLETED]
+    archived = [x for x in data if x.get("status") == STATUS_ARCHIVED]
 
     lines = [
-        "# 🎁 LINUX DO 中转站福利领取总览看板",
+        "# ⚡ 中转站资产全景大清查看板",
         "",
         f"> **更新时间**：`{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}`  ",
-        f"> **汇总统计**：总线报 `{len(data)}` 处 ｜ 🔴 待领取: `{len(pending)}` ｜ 🟡 待到账: `{len(submitted)}` ｜ 🟢 已到账: `{len(claimed)}`",
+        f"> **统计概览**：总收录 `{len(data)}` 个站点 ｜ 🟢 主力在用: `{len(active)}` ｜ 🟡 备用有钱: `{len(standby)}` ｜ 🔴 待领福利: `{len(pending)}` ｜ 🟠 额度耗尽: `{len(depleted)}` ｜ ⚫ 废弃隐藏: `{len(archived)}`",
         "",
         "---",
         "",
-        "## 🔴 待领取 (尚未留 UID / 尚未注册)",
+        "## 🟢 主力在用 (速度快 / 余额足 / 常用)",
         "",
-        "| 站点名称 | 福利额度 | 中转站网址 | 原帖链接 | 关键规则/备注 |",
-        "| :--- | :--- | :--- | :--- | :--- |",
+        "| 站点名称 | 控制台/官网链接 | 备注/剩余额度 |",
+        "| :--- | :--- | :--- |",
     ]
 
-    if not pending:
-        lines.append("| - | 暂无待领取福利 | - | - | - |")
-    else:
-        for item in pending:
-            s_name = item.get("site_name", "未知站点")
-            reward = item.get("reward_desc", "-")
-            site_url = item.get("site_url", "")
-            url_link = f"[{s_name}]({site_url})" if site_url else s_name
-            t_url = f"[直达帖子]({item.get('topic_url', '')})"
-            note = item.get("notes", "-")
-            lines.append(f"| **{s_name}** | {reward} | {url_link} | {t_url} | {note} |")
+    for item in active:
+        name = item.get("site_name", "未知站点")
+        url = item.get("site_url", "")
+        link = f"[{name}]({url})" if url else name
+        notes = item.get("notes") or item.get("reward_desc") or "-"
+        lines.append(f"| **{name}** | {link} | {notes} |")
 
     lines.extend([
         "",
-        "## 🟡 待到账 (已回帖留 UID，等待站长加额度)",
+        "## 🟡 备用有钱 (有残余额度 / 备用站)",
         "",
-        "| 站点名称 | 福利额度 | 我的 UID | 回帖时间 | 原帖直达 | 状态跟踪 |",
-        "| :--- | :--- | :--- | :--- | :--- | :--- |",
+        "| 站点名称 | 控制台链接 | 备注/残余额度 |",
+        "| :--- | :--- | :--- |",
     ])
-
-    if not submitted:
-        lines.append("| - | 暂无待审核项 | - | - | - | - |")
-    else:
-        for item in submitted:
-            s_name = item.get("site_name", "未知站点")
-            reward = item.get("reward_desc", "-")
-            my_uid = f"`{item.get('my_uid', '-')}`"
-            sub_time = item.get("submitted_at", item.get("updated_at", "-"))
-            t_url = f"[查看原帖]({item.get('topic_url', '')})"
-            lines.append(f"| **{s_name}** | {reward} | {my_uid} | {sub_time} | {t_url} | 站长审核中 |")
+    for item in standby:
+        name = item.get("site_name", "未知站点")
+        url = item.get("site_url", "")
+        link = f"[{name}]({url})" if url else name
+        notes = item.get("notes") or item.get("reward_desc") or "-"
+        lines.append(f"| **{name}** | {link} | {notes} |")
 
     lines.extend([
         "",
-        "## 🟢 已到账 (额度就绪，可随时调用)",
+        "## 🔴 待领福利帖 (LINUX DO 羊毛线报)",
         "",
-        "| 站点名称 | 实际到账 | 我的 UID / 账号 | 中转站网址 | 渠道/倍率亮点 |",
-        "| :--- | :--- | :--- | :--- | :--- |",
+        "| 活动标题 | 福利额度 | 原帖直达 | 我的 UID |",
+        "| :--- | :--- | :--- | :--- |",
     ])
+    for item in pending:
+        name = item.get("site_name", "福利贴")
+        reward = item.get("reward_desc", "送额度")
+        url = item.get("topic_url", "")
+        link = f"[原帖直达]({url})" if url else "-"
+        uid = f"`{item.get('my_uid')}`" if item.get('my_uid') else "未留"
+        lines.append(f"| **{name}** | {reward} | {link} | {uid} |")
 
-    if not claimed:
-        lines.append("| - | 暂无已到账记录 | - | - | - |")
+    lines.extend([
+        "",
+        "## 🟠 额度耗尽 (好用但暂时用光了)",
+        "",
+        "| 站点名称 | 网址 | 备注 |",
+        "| :--- | :--- | :--- |",
+    ])
+    if not depleted:
+        lines.append("| - | 暂无额度耗尽站点 | - |")
     else:
-        for item in claimed:
-            s_name = item.get("site_name", "未知站点")
-            reward = item.get("reward_desc", "-")
-            my_uid = f"`{item.get('my_uid', '-')}`"
-            site_url = item.get("site_url", "")
-            url_link = f"[登录控制台]({site_url})" if site_url else s_name
-            note = item.get("notes", "-")
-            lines.append(f"| **{s_name}** | {reward} | {my_uid} | {url_link} | {note} |")
+        for item in depleted:
+            name = item.get("site_name", "-")
+            url = item.get("site_url", "")
+            lines.append(f"| {name} | {url} | {item.get('notes', '-')} |")
 
     lines.append("")
     with open(BOARD_FILE, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
-    print(f"[OK] 看板已更新保存到 {BOARD_FILE}")
-
-def add_or_update_record(topic_id, site_name, site_url, reward_desc, notes="", topic_url=""):
-    data = load_data()
-    item = next((x for x in data if str(x.get("topic_id")) == str(topic_id)), None)
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    if not item:
-        item = {
-            "topic_id": str(topic_id),
-            "site_name": site_name,
-            "site_url": site_url,
-            "reward_desc": reward_desc,
-            "status": STATUS_PENDING,
-            "my_uid": "",
-            "topic_url": topic_url or f"https://linux.do/t/topic/{topic_id}",
-            "created_at": now_str,
-            "updated_at": now_str,
-            "notes": notes
-        }
-        data.append(item)
-        print(f"[新增线报] {site_name} (Topic ID: {topic_id})")
-    else:
-        item["site_name"] = site_name or item["site_name"]
-        item["site_url"] = site_url or item["site_url"]
-        item["reward_desc"] = reward_desc or item["reward_desc"]
-        item["notes"] = notes or item["notes"]
-        item["updated_at"] = now_str
-        print(f"[更新线报] {site_name} (Topic ID: {topic_id})")
-
-    save_data(data)
-    return item
-
-def mark_submitted(topic_id, my_uid):
-    data = load_data()
-    item = next((x for x in data if str(x.get("topic_id")) == str(topic_id)), None)
-    if not item:
-        print(f"[错误] 未找到 Topic ID 为 {topic_id} 的记录！")
-        return False
-
-    item["status"] = STATUS_SUBMITTED
-    item["my_uid"] = str(my_uid)
-    item["submitted_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    item["updated_at"] = item["submitted_at"]
-    save_data(data)
-    print(f"[已标记为待到账] {item.get('site_name')} (UID: {my_uid})")
-    return True
-
-def mark_claimed(topic_id):
-    data = load_data()
-    item = next((x for x in data if str(x.get("topic_id")) == str(topic_id)), None)
-    if not item:
-        print(f"[错误] 未找到 Topic ID 为 {topic_id} 的记录！")
-        return False
-
-    item["status"] = STATUS_CLAIMED
-    item["claimed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    item["updated_at"] = item["claimed_at"]
-    save_data(data)
-    print(f"[已标记为已到账] {item.get('site_name')}")
-    return True
+    print(f"[OK] 看板已保存到 {BOARD_FILE}")
 
 if __name__ == "__main__":
-    # 命令行快速操作支持
-    if len(sys.argv) > 1:
-        cmd = sys.argv[1].lower()
-        if cmd == "list":
-            render_markdown(load_data())
-        elif cmd == "submit" and len(sys.argv) >= 4:
-            mark_submitted(sys.argv[2], sys.argv[3])
-        elif cmd == "done" and len(sys.argv) >= 3:
-            mark_claimed(sys.argv[2])
-    else:
-        render_markdown(load_data())
+    render_markdown(load_data())

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LINUX DO 中转站福利领取管理台</title>
+  <title>中转站资产大清仓与健康看板</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -11,8 +11,8 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-    .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); }
-    .dark .glass { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); }
+    .glass { background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(12px); }
+    .dark .glass { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); }
   </style>
   <script>
     tailwind.config = {
@@ -20,243 +20,268 @@
       theme: {
         extend: {
           colors: {
-            brand: { 50: '#f0fdf4', 500: '#22c55e', 600: '#16a34a' }
+            brand: { 50: '#f0fdf4', 500: '#10b981', 600: '#059669' }
           }
         }
       }
     }
   </script>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
 
   <!-- 顶部导航栏 -->
   <header class="sticky top-0 z-40 glass border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 font-bold text-xl">
-          🎁
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 font-bold text-xl">
+          ⚡
         </div>
         <div>
           <h1 class="font-bold text-lg leading-tight flex items-center gap-2">
-            中转站福利管理台
-            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">LINUX DO 专属</span>
+            中转站资产管理看板
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-normal">Edge 书签已全量导入</span>
           </h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400">实时追踪·一键代回帖·额度到账管理</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">分清主力·盘活残额·排查死站·一键回帖</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
-        <button onclick="openNewModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">
+        <button onclick="openNewModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition">
           <i data-lucide="plus" class="w-4 h-4"></i>
-          <span>记一笔新福利</span>
+          <span>记一笔新站点</span>
+        </button>
+        <button onclick="exportJSON()" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="导出数据备份">
+          <i data-lucide="download" class="w-4 h-4"></i>
         </button>
         <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-          <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
-          <i data-lucide="sun" class="w-5 h-5 block dark:hidden"></i>
+          <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
         </button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- KPI 统计卡片区 -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-          <i data-lucide="layers" class="w-6 h-6"></i>
+    <!-- 5 维状态 KPI 统计卡片区 -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <!-- 1. 全部 -->
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-slate-400 transition" onclick="setTab('ALL')">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">总收录资产</span>
+          <i data-lucide="layers" class="w-4 h-4 text-slate-400"></i>
         </div>
-        <div>
-          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">总线报追踪</div>
-          <div id="stat-total" class="text-2xl font-bold">0</div>
-        </div>
+        <div id="stat-total" class="text-2xl font-bold">0</div>
       </div>
 
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex items-center gap-4 cursor-pointer hover:border-red-400 transition" onclick="setTab('PENDING')">
-        <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-          <i data-lucide="clock" class="w-6 h-6"></i>
+      <!-- 2. 主力在用 -->
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-emerald-500 transition" onclick="setTab('ACTIVE')">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">🟢 主力在用</span>
+          <i data-lucide="zap" class="w-4 h-4 text-emerald-500"></i>
         </div>
-        <div>
-          <div class="text-xs text-rose-600 dark:text-rose-400 font-medium">🔴 待领取 (未留UID)</div>
-          <div id="stat-pending" class="text-2xl font-bold text-rose-600 dark:text-rose-400">0</div>
-        </div>
+        <div id="stat-active" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">0</div>
       </div>
 
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex items-center gap-4 cursor-pointer hover:border-amber-400 transition" onclick="setTab('SUBMITTED')">
-        <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-          <i data-lucide="hourglass" class="w-6 h-6"></i>
+      <!-- 3. 备用有钱 -->
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-amber-500 transition" onclick="setTab('STANDBY')">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-amber-600 dark:text-amber-400 font-semibold">🟡 备用有钱</span>
+          <i data-lucide="wallet" class="w-4 h-4 text-amber-500"></i>
         </div>
-        <div>
-          <div class="text-xs text-amber-600 dark:text-amber-400 font-medium">🟡 待到账 (审核中)</div>
-          <div id="stat-submitted" class="text-2xl font-bold text-amber-600 dark:text-amber-400">0</div>
-        </div>
+        <div id="stat-standby" class="text-2xl font-bold text-amber-600 dark:text-amber-400">0</div>
       </div>
 
-      <div class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex items-center gap-4 cursor-pointer hover:border-emerald-400 transition" onclick="setTab('CLAIMED')">
-        <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-          <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+      <!-- 4. 待领福利 -->
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-rose-500 transition" onclick="setTab('PENDING')">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-rose-600 dark:text-rose-400 font-semibold">🔴 待领羊毛</span>
+          <i data-lucide="gift" class="w-4 h-4 text-rose-500"></i>
         </div>
-        <div>
-          <div class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">🟢 已到账 (可使用)</div>
-          <div id="stat-claimed" class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">0</div>
+        <div id="stat-pending" class="text-2xl font-bold text-rose-600 dark:text-rose-400">0</div>
+      </div>
+
+      <!-- 5. 额度耗尽 -->
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-orange-500 transition" onclick="setTab('DEPLETED')">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-orange-600 dark:text-orange-400 font-semibold">🟠 额度耗尽</span>
+          <i data-lucide="battery-low" class="w-4 h-4 text-orange-500"></i>
         </div>
+        <div id="stat-depleted" class="text-2xl font-bold text-orange-600 dark:text-orange-400">0</div>
+      </div>
+
+      <!-- 6. 难用废弃 -->
+      <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer hover:border-slate-500 transition" onclick="setTab('ARCHIVED')">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-slate-400 font-semibold">⚫ 难用/废弃</span>
+          <i data-lucide="trash-2" class="w-4 h-4 text-slate-400"></i>
+        </div>
+        <div id="stat-archived" class="text-2xl font-bold text-slate-400">0</div>
       </div>
     </div>
 
-    <!-- 筛选工具栏 -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-700/80">
-      <!-- Tabs 按钮组 -->
-      <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl text-sm font-medium">
+    <!-- 过滤器与控制栏 -->
+    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+      
+      <!-- 状态 Tabs -->
+      <div class="flex flex-wrap items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-semibold">
         <button onclick="setTab('ALL')" id="tab-ALL" class="tab-btn px-3 py-1.5 rounded-lg transition">全部</button>
-        <button onclick="setTab('PENDING')" id="tab-PENDING" class="tab-btn px-3 py-1.5 rounded-lg transition">🔴 待领取</button>
-        <button onclick="setTab('SUBMITTED')" id="tab-SUBMITTED" class="tab-btn px-3 py-1.5 rounded-lg transition">🟡 待到账</button>
-        <button onclick="setTab('CLAIMED')" id="tab-CLAIMED" class="tab-btn px-3 py-1.5 rounded-lg transition">🟢 已到账</button>
+        <button onclick="setTab('ACTIVE')" id="tab-ACTIVE" class="tab-btn px-3 py-1.5 rounded-lg transition">🟢 主力</button>
+        <button onclick="setTab('STANDBY')" id="tab-STANDBY" class="tab-btn px-3 py-1.5 rounded-lg transition">🟡 备用</button>
+        <button onclick="setTab('PENDING')" id="tab-PENDING" class="tab-btn px-3 py-1.5 rounded-lg transition">🔴 待领</button>
+        <button onclick="setTab('DEPLETED')" id="tab-DEPLETED" class="tab-btn px-3 py-1.5 rounded-lg transition">🟠 没钱</button>
+        <button onclick="setTab('ARCHIVED')" id="tab-ARCHIVED" class="tab-btn px-3 py-1.5 rounded-lg transition">⚫ 废弃</button>
       </div>
 
-      <!-- 搜索框 -->
-      <div class="relative flex-1 sm:max-w-xs">
-        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-        <input type="text" id="searchInput" oninput="renderCards()" placeholder="搜索站点名称/倍率/关键词..." class="w-full pl-9 pr-4 py-1.5 text-sm rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+      <!-- 类型分类 + 搜索 + 隐藏开关 -->
+      <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
+        <!-- 类型筛选 -->
+        <select id="typeFilter" onchange="renderCards()" class="px-2.5 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none">
+          <option value="ALL">全部分类 (控制台+活动)</option>
+          <option value="CONSOLE">🖥️ 中转控制台</option>
+          <option value="DEAL">🎁 L站活动帖</option>
+        </select>
+
+        <!-- 隐藏废弃站开关 -->
+        <label class="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer select-none px-2 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+          <input type="checkbox" id="hideArchived" onchange="renderCards()" checked class="rounded text-emerald-600 focus:ring-0">
+          <span>隐藏已废弃</span>
+        </label>
+
+        <!-- 搜索框 -->
+        <div class="relative flex-1 sm:w-64">
+          <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="searchInput" oninput="renderCards()" placeholder="搜索站点/网址/备注..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
       </div>
+
     </div>
 
     <!-- 列表展示区 -->
-    <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <!-- 动态渲染卡片 -->
     </div>
 
-    <!-- 空状态提示 -->
+    <!-- 空状态 -->
     <div id="emptyState" class="hidden py-16 text-center text-slate-400">
-      <i data-lucide="inbox" class="w-12 h-12 mx-auto stroke-1 mb-2"></i>
-      <p>当前分类下暂无福利记录</p>
+      <i data-lucide="inbox" class="w-10 h-10 mx-auto stroke-1 mb-2"></i>
+      <p class="text-sm">当前筛选条件下暂无站点</p>
     </div>
 
   </main>
 
   <!-- 填写 UID / 回帖 Modal 弹窗 -->
-  <div id="claimModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-      <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-700">
-        <h3 class="font-bold text-lg flex items-center gap-2">
-          <span>✍️ 填写 UID / 登记回帖</span>
+  <div id="claimModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <span>✍️ 填写 UID / 回帖登记</span>
         </h3>
         <button onclick="closeClaimModal()" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
 
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">中转站名称</label>
-          <div id="modalSiteName" class="text-sm font-semibold"></div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">目标中转站</label>
+          <div id="modalSiteName" class="text-sm font-bold text-slate-800 dark:text-slate-100"></div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">你的账号 UID</label>
-          <input type="text" id="modalUidInput" placeholder="输入你在该中转站注册的 UID (如 12345)" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none">
-          <p class="text-xs text-slate-400 mt-1">在中转站个人中心可以找到。填入后将自动生成回复并变更状态为待到账。</p>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">你的账号 UID</label>
+          <input type="text" id="modalUidInput" placeholder="输入你在该站注册的 UID (如 12345)" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 focus:ring-2 focus:ring-emerald-500 outline-none">
         </div>
 
-        <div class="p-3 bg-slate-50 dark:bg-slate-900 rounded-xl text-xs space-y-1 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-800">
-          <div class="font-medium text-slate-700 dark:text-slate-300">💡 推荐操作步骤：</div>
-          <div>1. 点下方按钮直达中转站注册并复制 UID；</div>
-          <div>2. 填入上方输入框，点击“确认提交”；</div>
-          <div>3. 状态将自动更新为 🟡 待到账。</div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">备注说明 (可选)</label>
+          <input type="text" id="modalNotesInput" placeholder="例如：Claude 0.25x / 送 5 刀" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
         </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-2">
-        <button onclick="closeClaimModal()" class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">取消</button>
-        <button onclick="submitClaim()" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm">确认并标记为待到账</button>
+        <button onclick="closeClaimModal()" class="px-3.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">取消</button>
+        <button onclick="submitClaim()" class="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm">保存并标记为待到账</button>
       </div>
     </div>
   </div>
 
-  <!-- 手动新增福利 Modal 弹窗 -->
-  <div id="newModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-      <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-700">
-        <h3 class="font-bold text-lg">➕ 记录新发现的中转站福利</h3>
+  <!-- 新增站点 Modal 弹窗 -->
+  <div id="newModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
+        <h3 class="font-bold text-base">➕ 手动记一笔新站点</h3>
         <button onclick="closeNewModal()" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
 
-      <div class="space-y-3 text-sm">
+      <div class="space-y-3 text-xs">
         <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">站点名称 *</label>
-          <input type="text" id="newSiteName" placeholder="例如：AllRouter" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 outline-none">
+          <label class="block font-semibold text-slate-400 mb-1">站点名称 *</label>
+          <input type="text" id="newSiteName" placeholder="例如：元流 / AllRouter" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">福利说明 *</label>
-          <input type="text" id="newReward" placeholder="例如：留 UID 送 5 美元额度" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 outline-none">
+          <label class="block font-semibold text-slate-400 mb-1">控制台/官网网址</label>
+          <input type="url" id="newSiteUrl" placeholder="https://..." class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">中转站网址</label>
-          <input type="url" id="newSiteUrl" placeholder="https://..." class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 outline-none">
+          <label class="block font-semibold text-slate-400 mb-1">状态分类</label>
+          <select id="newStatus" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
+            <option value="ACTIVE">🟢 主力在用 (有钱/好用)</option>
+            <option value="STANDBY">🟡 备用有钱 (有残额)</option>
+            <option value="PENDING">🔴 待领福利 (线报)</option>
+            <option value="DEPLETED">🟠 额度耗尽 (没钱了)</option>
+            <option value="ARCHIVED">⚫ 难用废弃</option>
+          </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">L 站原帖链接</label>
-          <input type="url" id="newTopicUrl" placeholder="https://linux.do/t/topic/..." class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 outline-none">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-500 mb-1">倍率/亮点备注</label>
-          <input type="text" id="newNotes" placeholder="例如：Claude 0.25x / GPT 0.053x" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-slate-900 outline-none">
+          <label class="block font-semibold text-slate-400 mb-1">备注/残余额度 (例如: 还剩5块钱)</label>
+          <input type="text" id="newNotes" placeholder="例如：还有 1 块钱 / Claude max 满血" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-950 outline-none">
         </div>
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-2">
-        <button onclick="closeNewModal()" class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">取消</button>
-        <button onclick="saveNewRecord()" class="px-4 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm">保存线报</button>
+        <button onclick="closeNewModal()" class="px-3.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">取消</button>
+        <button onclick="saveNewRecord()" class="px-3.5 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm">保存入库</button>
       </div>
     </div>
   </div>
 
   <script>
-    // 默认内置初始数据（与 rewards_data.json 对齐）
-    const DEFAULT_DATA = [
-      {
-        "topic_id": "3194780",
-        "site_name": "AllRouter",
-        "site_url": "https://allrouter.com",
-        "reward_desc": "留 UID 送 5 美元额度",
-        "status": "PENDING",
-        "my_uid": "",
-        "topic_url": "https://linux.do/t/topic/3194780",
-        "created_at": "2026-11-22 15:59:22",
-        "updated_at": "2026-11-22 15:59:22",
-        "notes": "主打不降智，Claude max 0.25x / GPT 0.053x"
-      }
-    ];
-
     let currentTab = 'ALL';
     let rewards = [];
-    let activeClaimTopicId = null;
+    let activeTopicId = null;
 
-    // 初始化数据
+    const STATUS_INFO = {
+      ACTIVE:   { label: '🟢 主力在用', badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800' },
+      STANDBY:  { label: '🟡 备用有钱', badge: 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 border-amber-300 dark:border-amber-800' },
+      PENDING:  { label: '🔴 待领福利', badge: 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-400 border-rose-300 dark:border-rose-800' },
+      SUBMITTED:{ label: '📋 审核中',   badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' },
+      DEPLETED: { label: '🟠 额度耗尽', badge: 'bg-orange-100 text-orange-700 dark:bg-orange-950/80 dark:text-orange-400 border-orange-300 dark:border-orange-800' },
+      ARCHIVED: { label: '⚫ 难用废弃', badge: 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-300 dark:border-slate-700' }
+    };
+
     async function initData() {
-      // 优先从本地/远程 rewards_data.json 加载
       try {
         const resp = await fetch('rewards_data.json');
         if (resp.ok) {
           rewards = await resp.json();
+          localStorage.setItem('linuxdo_rewards_data_v2', JSON.stringify(rewards));
         } else {
-          loadFromLocal();
+          loadLocal();
         }
       } catch (e) {
-        loadFromLocal();
+        loadLocal();
       }
       renderAll();
     }
 
-    function loadFromLocal() {
-      const stored = localStorage.getItem('linuxdo_rewards_data');
+    function loadLocal() {
+      const stored = localStorage.getItem('linuxdo_rewards_data_v2');
       if (stored) {
-        try { rewards = JSON.parse(stored); } catch(e) { rewards = DEFAULT_DATA; }
-      } else {
-        rewards = DEFAULT_DATA;
+        try { rewards = JSON.parse(stored); } catch(e) { rewards = []; }
       }
     }
 
     function persist() {
-      localStorage.setItem('linuxdo_rewards_data', JSON.stringify(rewards));
-      // 如果本地有后台接口，也可以异步同步给 server
+      localStorage.setItem('linuxdo_rewards_data_v2', JSON.stringify(rewards));
       try {
         fetch('/api/rewards/sync', {
           method: 'POST',
@@ -276,9 +301,11 @@
 
     function updateStats() {
       document.getElementById('stat-total').innerText = rewards.length;
-      document.getElementById('stat-pending').innerText = rewards.filter(x => x.status === 'PENDING').length;
-      document.getElementById('stat-submitted').innerText = rewards.filter(x => x.status === 'SUBMITTED').length;
-      document.getElementById('stat-claimed').innerText = rewards.filter(x => x.status === 'CLAIMED').length;
+      document.getElementById('stat-active').innerText = rewards.filter(x => x.status === 'ACTIVE').length;
+      document.getElementById('stat-standby').innerText = rewards.filter(x => x.status === 'STANDBY').length;
+      document.getElementById('stat-pending').innerText = rewards.filter(x => x.status === 'PENDING' || x.status === 'SUBMITTED').length;
+      document.getElementById('stat-depleted').innerText = rewards.filter(x => x.status === 'DEPLETED').length;
+      document.getElementById('stat-archived').innerText = rewards.filter(x => x.status === 'ARCHIVED').length;
     }
 
     function setTab(tab) {
@@ -288,31 +315,48 @@
     }
 
     function updateTabButtons() {
-      const tabs = ['ALL', 'PENDING', 'SUBMITTED', 'CLAIMED'];
+      const tabs = ['ALL', 'ACTIVE', 'STANDBY', 'PENDING', 'DEPLETED', 'ARCHIVED'];
       tabs.forEach(t => {
         const btn = document.getElementById('tab-' + t);
         if (currentTab === t) {
-          btn.className = 'tab-btn px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm font-semibold';
+          btn.className = 'tab-btn px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm font-bold';
         } else {
-          btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+          btn.className = 'tab-btn px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200';
         }
       });
     }
 
     function renderCards() {
       const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const typeFilter = document.getElementById('typeFilter').value;
+      const hideArchived = document.getElementById('hideArchived').checked;
+
       const container = document.getElementById('cardsContainer');
       const emptyState = document.getElementById('emptyState');
 
       let list = rewards;
+
+      // 状态筛选
       if (currentTab !== 'ALL') {
         list = list.filter(x => x.status === currentTab);
+      } else if (hideArchived) {
+        // 全选模式下若勾选隐藏废弃站，则过滤掉 ARCHIVED
+        list = list.filter(x => x.status !== 'ARCHIVED');
       }
+
+      // 类型筛选
+      if (typeFilter !== 'ALL') {
+        list = list.filter(x => (x.item_type || 'CONSOLE') === typeFilter);
+      }
+
+      // 关键词搜索
       if (query) {
         list = list.filter(x => 
           (x.site_name || '').toLowerCase().includes(query) ||
-          (x.reward_desc || '').toLowerCase().includes(query) ||
-          (x.notes || '').toLowerCase().includes(query)
+          (x.full_name || '').toLowerCase().includes(query) ||
+          (x.site_url || '').toLowerCase().includes(query) ||
+          (x.notes || '').toLowerCase().includes(query) ||
+          (x.reward_desc || '').toLowerCase().includes(query)
         );
       }
 
@@ -324,80 +368,65 @@
       emptyState.classList.add('hidden');
 
       container.innerHTML = list.map(item => {
-        const isPending = item.status === 'PENDING';
-        const isSubmitted = item.status === 'SUBMITTED';
-        const isClaimed = item.status === 'CLAIMED';
-
-        let badge = '';
-        if (isPending) badge = `<span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> 待领取 (未留UID)</span>`;
-        if (isSubmitted) badge = `<span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> 待到账 (审核中)</span>`;
-        if (isClaimed) badge = `<span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> 已到账可用</span>`;
+        const st = STATUS_INFO[item.status] || STATUS_INFO.STANDBY;
+        const isConsole = (item.item_type || 'CONSOLE') === 'CONSOLE';
+        const jumpUrl = item.site_url || item.topic_url || '#';
 
         return `
-          <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-3">
             <div>
-              <div class="flex items-start justify-between gap-3 mb-2">
-                <div>
-                  <h3 class="font-bold text-lg tracking-tight hover:text-emerald-600 transition flex items-center gap-1.5">
-                    ${item.site_name}
+              <div class="flex items-start justify-between gap-2 mb-1.5">
+                <div class="min-w-0">
+                  <h3 class="font-bold text-sm truncate hover:text-emerald-500 transition" title="${item.full_name || item.site_name}">
+                    ${isConsole ? '🖥️ ' : '🎁 '}${item.site_name}
                   </h3>
-                  <div class="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                    <span>Topic ID: ${item.topic_id}</span>
-                    <span>•</span>
-                    <span>${item.created_at || ''}</span>
+                  <div class="text-[11px] text-slate-400 truncate mt-0.5" title="${jumpUrl}">
+                    ${jumpUrl.replace('https://', '').replace('http://', '')}
                   </div>
                 </div>
-                ${badge}
+
+                <!-- 状态选择下拉框 -->
+                <select onchange="changeStatus('${item.id || item.topic_id}', this.value)" class="text-[11px] font-semibold px-2 py-0.5 rounded-full border outline-none cursor-pointer ${st.badge}">
+                  <option value="ACTIVE" ${item.status === 'ACTIVE' ? 'selected' : ''}>🟢 主力在用</option>
+                  <option value="STANDBY" ${item.status === 'STANDBY' ? 'selected' : ''}>🟡 备用有钱</option>
+                  <option value="PENDING" ${item.status === 'PENDING' ? 'selected' : ''}>🔴 待领福利</option>
+                  <option value="DEPLETED" ${item.status === 'DEPLETED' ? 'selected' : ''}>🟠 额度耗尽</option>
+                  <option value="ARCHIVED" ${item.status === 'ARCHIVED' ? 'selected' : ''}>⚫ 难用废弃</option>
+                </select>
               </div>
 
-              <!-- 福利高亮 -->
-              <div class="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl my-3 border border-slate-100 dark:border-slate-800/80">
-                <div class="text-xs text-slate-500 dark:text-slate-400">福利内容</div>
-                <div class="font-semibold text-sm text-emerald-600 dark:text-emerald-400">${item.reward_desc}</div>
-                ${item.notes ? `<div class="text-xs text-slate-500 mt-1">亮点：${item.notes}</div>` : ''}
+              <!-- 备注与福利说明 -->
+              <div class="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-xl my-2 border border-slate-100 dark:border-slate-800 text-xs space-y-1">
+                ${item.reward_desc ? `<div class="font-medium text-slate-700 dark:text-slate-300 truncate">${item.reward_desc}</div>` : ''}
+                ${item.notes ? `<div class="text-slate-400 text-[11px] truncate">📌 备注：${item.notes}</div>` : ''}
+                ${item.my_uid ? `<div class="text-[11px] text-emerald-600 font-mono">UID: ${item.my_uid}</div>` : ''}
               </div>
-
-              <!-- 我的 UID 信息 -->
-              ${item.my_uid ? `
-                <div class="text-xs flex items-center gap-2 text-slate-600 dark:text-slate-300 mb-2">
-                  <span class="font-medium text-slate-400">已留 UID:</span>
-                  <code class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-slate-200">${item.my_uid}</code>
-                  ${item.submitted_at ? `<span class="text-slate-400">(${item.submitted_at})</span>` : ''}
-                </div>
-              ` : ''}
             </div>
 
-            <!-- 操作按钮栏 -->
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/60">
-              <div class="flex items-center gap-2">
+            <!-- 操作按钮 -->
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <div class="flex items-center gap-1.5">
                 ${item.site_url ? `
-                  <a href="${item.site_url}" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition flex items-center gap-1">
-                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i> 直达注册
+                  <a href="${item.site_url}" target="_blank" class="px-2.5 py-1 rounded-lg font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1">
+                    <i data-lucide="external-link" class="w-3 h-3"></i> 进入控制台
                   </a>
                 ` : ''}
                 ${item.topic_url ? `
-                  <a href="${item.topic_url}" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition flex items-center gap-1">
-                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i> 原帖
+                  <a href="${item.topic_url}" target="_blank" class="px-2.5 py-1 rounded-lg font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1">
+                    <i data-lucide="message-square" class="w-3 h-3"></i> 原帖
                   </a>
                 ` : ''}
               </div>
 
-              <div class="flex items-center gap-1.5">
-                ${isPending ? `
-                  <button onclick="openClaimModal('${item.topic_id}')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-600 hover:bg-rose-500 text-white shadow-sm transition flex items-center gap-1">
-                    <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i> 填UID/回帖
+              <div class="flex items-center gap-1">
+                ${(item.status === 'PENDING' || !isConsole) ? `
+                  <button onclick="openClaim('${item.id || item.topic_id}')" class="px-2.5 py-1 rounded-lg font-medium bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-900 hover:bg-rose-100 transition flex items-center gap-1">
+                    <i data-lucide="pen-tool" class="w-3 h-3"></i> 记UID
                   </button>
                 ` : ''}
-                ${isSubmitted ? `
-                  <button onclick="markDone('${item.topic_id}')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition flex items-center gap-1">
-                    <i data-lucide="check" class="w-3.5 h-3.5"></i> 标记已到账
-                  </button>
-                ` : ''}
-                ${isClaimed ? `
-                  <button onclick="reopen('${item.topic_id}')" class="px-2.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-600 transition">
-                    重新标记
-                  </button>
-                ` : ''}
+                <button onclick="editNote('${item.id || item.topic_id}')" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="修改备注/余额">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -406,101 +435,99 @@
       lucide.createIcons();
     }
 
+    // 状态切换
+    function changeStatus(id, newStatus) {
+      const item = rewards.find(x => (x.id || x.topic_id) === id);
+      if (item) {
+        item.status = newStatus;
+        persist();
+      }
+    }
+
+    // 快速修改备注
+    function editNote(id) {
+      const item = rewards.find(x => (x.id || x.topic_id) === id);
+      if (!item) return;
+      const newNote = prompt(`修改 [${item.site_name}] 的备注或剩余额度：`, item.notes || '');
+      if (newNote !== null) {
+        item.notes = newNote.trim();
+        persist();
+      }
+    }
+
     // Modal 控制
-    function openClaimModal(topicId) {
-      activeClaimTopicId = topicId;
-      const item = rewards.find(x => x.topic_id === topicId);
+    function openClaim(id) {
+      activeTopicId = id;
+      const item = rewards.find(x => (x.id || x.topic_id) === id);
       if (!item) return;
       document.getElementById('modalSiteName').innerText = `${item.site_name} (${item.reward_desc})`;
       document.getElementById('modalUidInput').value = item.my_uid || '';
+      document.getElementById('modalNotesInput').value = item.notes || '';
       document.getElementById('claimModal').classList.remove('hidden');
     }
 
     function closeClaimModal() {
       document.getElementById('claimModal').classList.add('hidden');
-      activeClaimTopicId = null;
+      activeTopicId = null;
     }
 
     function submitClaim() {
       const uid = document.getElementById('modalUidInput').value.trim();
-      if (!uid) {
-        alert('请先输入你的账号 UID！');
-        return;
-      }
-      const item = rewards.find(x => x.topic_id === activeClaimTopicId);
+      const notes = document.getElementById('modalNotesInput').value.trim();
+      const item = rewards.find(x => (x.id || x.topic_id) === activeTopicId);
       if (item) {
-        item.status = 'SUBMITTED';
         item.my_uid = uid;
-        item.submitted_at = new Date().toLocaleString();
+        if (notes) item.notes = notes;
+        item.status = 'STANDBY'; // 登记后变为备用有钱
         persist();
       }
       closeClaimModal();
     }
 
-    function markDone(topicId) {
-      const item = rewards.find(x => x.topic_id === topicId);
-      if (item) {
-        item.status = 'CLAIMED';
-        item.claimed_at = new Date().toLocaleString();
-        persist();
-      }
-    }
-
-    function reopen(topicId) {
-      const item = rewards.find(x => x.topic_id === topicId);
-      if (item) {
-        item.status = 'PENDING';
-        persist();
-      }
-    }
-
-    // 新增福利
-    function openNewModal() {
-      document.getElementById('newModal').classList.remove('hidden');
-    }
-
-    function closeNewModal() {
-      document.getElementById('newModal').classList.add('hidden');
-    }
+    // 新增站点
+    function openNewModal() { document.getElementById('newModal').classList.remove('hidden'); }
+    function closeNewModal() { document.getElementById('newModal').classList.add('hidden'); }
 
     function saveNewRecord() {
       const name = document.getElementById('newSiteName').value.trim();
-      const reward = document.getElementById('newReward').value.trim();
       const siteUrl = document.getElementById('newSiteUrl').value.trim();
-      const topicUrl = document.getElementById('newTopicUrl').value.trim();
+      const status = document.getElementById('newStatus').value;
       const notes = document.getElementById('newNotes').value.trim();
 
-      if (!name || !reward) {
-        alert('站点名称和福利说明为必填项！');
-        return;
-      }
-
-      let topicId = Date.now().toString();
-      const match = topicUrl.match(/topic\/(\d+)/);
-      if (match) topicId = match[1];
+      if (!name) { alert('站点名称必填！'); return; }
 
       rewards.unshift({
-        topic_id: topicId,
+        id: Date.now().toString(),
         site_name: name,
+        full_name: name,
         site_url: siteUrl,
-        reward_desc: reward,
-        status: 'PENDING',
+        topic_url: '',
+        item_type: 'CONSOLE',
+        reward_desc: '自定义中转站',
+        status: status,
         my_uid: '',
-        topic_url: topicUrl,
-        created_at: new Date().toLocaleString(),
-        notes: notes
+        notes: notes,
+        created_at: new Date().toLocaleString()
       });
 
       persist();
       closeNewModal();
     }
 
-    // 暗黑模式切换
+    // 导出备份
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(rewards, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `my_api_sites_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    // 暗黑模式
     function toggleDarkMode() {
       document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
     }
-
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     }
