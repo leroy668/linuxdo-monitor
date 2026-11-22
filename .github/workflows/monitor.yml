@@ -31,6 +31,7 @@ jobs:
         env:
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           TARGET_USER: ${{ secrets.TARGET_USER || 'Andrew-hh' }}
+          TARGET_TOPIC_ID: ${{ secrets.TARGET_TOPIC_ID || '2696141' }}
         run: python monitor.py
 
       - name: Commit and push state
