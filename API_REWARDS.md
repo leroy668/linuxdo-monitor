@@ -1,7 +1,7 @@
 # ⚡ 中转站资产全景大清查看板
 
-> **更新时间**：`2026-11-22 18:09:50`  
-> **统计概览**：总收录 `62` 个站点 ｜ 🟢 主力在用: `8` ｜ 🟡 备用有钱: `6` ｜ 🔴 待领福利: `19` ｜ ⚫ 废弃隐藏: `29`
+> **更新时间**：`2026-11-22 19:05:31`  
+> **统计概览**：总收录 `61` 个站点 ｜ 🟢 主力在用: `7` ｜ 🟡 备用有钱: `6` ｜ 🔴 待领福利: `19` ｜ ⚫ 废弃隐藏: `29`
 
 ---
 
@@ -16,7 +16,6 @@
 | **CodeGo** | [CodeGo](https://codegoai.com/wallet) | 已付费主力使用 |
 | **SevenAI** | [SevenAI](https://sevenai.moe/keys) | 已付费主力使用 |
 | **RelayRouter** | [RelayRouter](https://www.relayrouter.app/console/topup) | - |
-| **api666** | [api666](https://api666.zzzcoding.org/) | - |
 
 ## 🟡 备用有钱 (有残余额度 / 备用站)
 

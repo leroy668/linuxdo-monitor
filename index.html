@@ -299,6 +299,7 @@
   <script>
     const STORAGE_KEY = 'linuxdo_rewards_data_v4';
     const USER_EDITS_KEY = 'linuxdo_user_custom_notes';
+    const DELETED_ITEMS_KEY = 'linuxdo_deleted_items';
     let currentTab = 'ALL';
     let rewards = [];
     let activeTopicId = null;
@@ -364,7 +365,7 @@
     // 强行净化脏数据，彻底消除旧 FluxionAI 或假想域名
     function sanitizeList(list) {
       if (!Array.isArray(list)) return [];
-      const cleaned = list.map(item => {
+      let cleaned = list.map(item => {
         const name = (item.site_name || '').toLowerCase();
         const url = (item.site_url || '').toLowerCase();
         
@@ -386,6 +387,20 @@
         }
         return item;
       });
+
+      // 过滤掉所有命中用户已删除黑名单的项（确保删除后永不复活）
+      let deletedKeys = [];
+      try {
+        deletedKeys = JSON.parse(localStorage.getItem(DELETED_ITEMS_KEY) || '[]');
+      } catch(e) {}
+      if (deletedKeys.length > 0) {
+        cleaned = cleaned.filter(it => {
+          const id = String(it.id || '');
+          const tid = String(it.topic_id || '');
+          const name = (it.site_name || '').toLowerCase();
+          return !deletedKeys.includes(id) && !deletedKeys.includes(tid) && !deletedKeys.includes(name);
+        });
+      }
 
       // 无论何处加载，始终应用用户自定义保护层
       return applyUserCustomEdits(cleaned);
@@ -699,7 +714,19 @@
     }
 
     function deleteCurrentItem() {
-      if (!confirm('确定要从看板中删除此站点吗？')) return;
+      if (!confirm('确定要从看板中彻底删除此站点吗？')) return;
+      const target = rewards.find(x => (x.id || x.topic_id) === editItemId);
+      if (target) {
+        // 记录黑名单（记录 ID、原帖 ID 和名称，确保永不复活）
+        let deletedKeys = [];
+        try {
+          deletedKeys = JSON.parse(localStorage.getItem(DELETED_ITEMS_KEY) || '[]');
+        } catch(e) {}
+        if (target.id) deletedKeys.push(String(target.id));
+        if (target.topic_id) deletedKeys.push(String(target.topic_id));
+        if (target.site_name) deletedKeys.push(target.site_name.toLowerCase());
+        localStorage.setItem(DELETED_ITEMS_KEY, JSON.stringify([...new Set(deletedKeys)]));
+      }
       rewards = rewards.filter(x => (x.id || x.topic_id) !== editItemId);
       persist();
       closeEditModal();
