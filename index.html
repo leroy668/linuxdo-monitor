@@ -297,7 +297,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'linuxdo_rewards_data_v3';
+    const STORAGE_KEY = 'linuxdo_rewards_data_v4';
     let currentTab = 'ALL';
     let rewards = [];
     let activeTopicId = null;
@@ -310,31 +310,71 @@
       ARCHIVED: { label: '⚫ 难用废弃', badge: 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-300 dark:border-slate-700' }
     };
 
+    // 强行净化脏数据，彻底消除旧 FluxionAI 或假想域名
+    function sanitizeList(list) {
+      if (!Array.isArray(list)) return [];
+      return list.map(item => {
+        const name = (item.site_name || '').toLowerCase();
+        const url = (item.site_url || '').toLowerCase();
+        
+        // 彻底将 Fluxion 迁移为 Sidrune
+        if (name.includes('fluxion') || url.includes('fluxionai.space')) {
+          item.site_name = 'Sidrune AI';
+          item.full_name = '仪表盘 - Sidrune AI (原 FluxionAI)';
+          item.site_url = 'https://sidrune.ai/dashboard';
+          item.topic_url = 'https://linux.do/t/topic/3057748';
+          item.topic_id = '3057748';
+          item.status = 'ACTIVE';
+          item.notes = '原 FluxionAI 品牌升级；已付费主力；支持 L站 Connect 一键登录';
+        }
+        
+        // 清除假想域名
+        if (url.includes('allrouter.com')) {
+          item.site_url = '';
+          item.status = 'ARCHIVED';
+        }
+        return item;
+      });
+    }
+
     async function initData() {
-      // 检查本地缓存
+      // 1. 优先拉取最新的服务端/本地 json 文件，保证同步不脱节
+      try {
+        const resp = await fetch('rewards_data.json?t=' + Date.now());
+        if (resp.ok) {
+          const freshData = await resp.json();
+          if (freshData && freshData.length > 0) {
+            rewards = sanitizeList(freshData);
+            persist();
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('拉取 rewards_data.json 失败，回退至本地存储', e);
+      }
+
+      // 2. 离线时回退到本地存储，并自动净化
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         try {
-          rewards = JSON.parse(stored);
+          rewards = sanitizeList(JSON.parse(stored));
         } catch(e) {
           rewards = [];
         }
       }
-      
-      // 若无缓存或缓存空，从 rewards_data.json 加载
-      if (!rewards || rewards.length === 0) {
-        await reloadCleanData();
-      } else {
-        renderAll();
-      }
+      renderAll();
     }
 
     async function reloadCleanData() {
+      localStorage.removeItem('linuxdo_rewards_data_v2');
+      localStorage.removeItem('linuxdo_rewards_data_v3');
+      localStorage.removeItem(STORAGE_KEY);
       try {
         const resp = await fetch('rewards_data.json?t=' + Date.now());
         if (resp.ok) {
-          rewards = await resp.json();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(rewards));
+          const fresh = await resp.json();
+          rewards = sanitizeList(fresh);
+          persist();
         }
       } catch (e) {
         console.error('加载纯净数据失败', e);
