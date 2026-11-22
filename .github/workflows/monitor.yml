@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -32,6 +32,7 @@ jobs:
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           TARGET_USER: ${{ secrets.TARGET_USER || 'Andrew-hh' }}
           TARGET_TOPIC_ID: ${{ secrets.TARGET_TOPIC_ID || '2696141' }}
+          LINUXDO_COOKIE: ${{ secrets.LINUXDO_COOKIE }}
         run: python monitor.py
 
       - name: Commit and push state
