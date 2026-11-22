@@ -298,6 +298,7 @@
 
   <script>
     const STORAGE_KEY = 'linuxdo_rewards_data_v4';
+    const USER_EDITS_KEY = 'linuxdo_user_custom_notes';
     let currentTab = 'ALL';
     let rewards = [];
     let activeTopicId = null;
@@ -310,10 +311,60 @@
       ARCHIVED: { label: '⚫ 难用废弃', badge: 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-300 dark:border-slate-700' }
     };
 
+    // 记录用户手写的自定义修改（最高优先级，永不被服务端覆写）
+    function recordUserEdit(itemKey, updates) {
+      let userEdits = {};
+      try {
+        userEdits = JSON.parse(localStorage.getItem(USER_EDITS_KEY) || '{}');
+      } catch(e) {}
+      userEdits[itemKey] = Object.assign(userEdits[itemKey] || {}, updates);
+      localStorage.setItem(USER_EDITS_KEY, JSON.stringify(userEdits));
+    }
+
+    // 智能合并：保留用户手写的备注与 UID，并从历史版本中抢救
+    function applyUserCustomEdits(list) {
+      let userEdits = {};
+      try {
+        userEdits = JSON.parse(localStorage.getItem(USER_EDITS_KEY) || '{}');
+      } catch(e) {}
+
+      // 尝试从 v2 / v3 旧缓存中抢救用户写过的自定义备注
+      ['linuxdo_rewards_data_v3', 'linuxdo_rewards_data_v2'].forEach(k => {
+        const oldStored = localStorage.getItem(k);
+        if (oldStored) {
+          try {
+            const oldList = JSON.parse(oldStored);
+            oldList.forEach(oldItem => {
+              const key = oldItem.id || oldItem.topic_id || oldItem.site_name;
+              if (oldItem.notes && !['已付费主力使用', '暂时废弃付费', '已领鸡蛋/活动已结束/难用废弃'].includes(oldItem.notes)) {
+                if (!userEdits[key]) userEdits[key] = {};
+                if (!userEdits[key].notes) userEdits[key].notes = oldItem.notes;
+              }
+              if (oldItem.my_uid) {
+                if (!userEdits[key]) userEdits[key] = {};
+                if (!userEdits[key].my_uid) userEdits[key].my_uid = oldItem.my_uid;
+              }
+            });
+          } catch(e) {}
+        }
+      });
+      localStorage.setItem(USER_EDITS_KEY, JSON.stringify(userEdits));
+
+      return list.map(item => {
+        const key = item.id || item.topic_id || item.site_name;
+        if (userEdits[key]) {
+          if (userEdits[key].notes !== undefined) item.notes = userEdits[key].notes;
+          if (userEdits[key].my_uid !== undefined) item.my_uid = userEdits[key].my_uid;
+          if (userEdits[key].status !== undefined) item.status = userEdits[key].status;
+        }
+        return item;
+      });
+    }
+
     // 强行净化脏数据，彻底消除旧 FluxionAI 或假想域名
     function sanitizeList(list) {
       if (!Array.isArray(list)) return [];
-      return list.map(item => {
+      const cleaned = list.map(item => {
         const name = (item.site_name || '').toLowerCase();
         const url = (item.site_url || '').toLowerCase();
         
@@ -335,6 +386,9 @@
         }
         return item;
       });
+
+      // 无论何处加载，始终应用用户自定义保护层
+      return applyUserCustomEdits(cleaned);
     }
 
     async function initData() {
@@ -353,7 +407,7 @@
         console.warn('拉取 rewards_data.json 失败，回退至本地存储', e);
       }
 
-      // 2. 离线时回退到本地存储，并自动净化
+      // 2. 离线时回退到本地存储，并自动净化与合并
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         try {
@@ -558,6 +612,7 @@
       const item = rewards.find(x => (x.id || x.topic_id) === id);
       if (item) {
         item.status = newStatus;
+        recordUserEdit(id, { status: newStatus });
         persist();
       }
     }
@@ -591,6 +646,12 @@
         }
         if (notes) item.notes = notes;
         item.status = 'STANDBY';
+        recordUserEdit(item.id || item.topic_id, {
+          my_uid: uid,
+          notes: item.notes,
+          status: 'STANDBY',
+          site_url: item.site_url
+        });
         persist();
       }
       closeClaimModal();
@@ -626,6 +687,13 @@
       item.my_uid = document.getElementById('editUid').value.trim();
       item.notes = document.getElementById('editNotes').value.trim();
       if (item.site_url) item.item_type = 'CONSOLE';
+      recordUserEdit(item.id || item.topic_id, {
+        notes: item.notes,
+        my_uid: item.my_uid,
+        status: item.status,
+        site_name: item.site_name,
+        site_url: item.site_url
+      });
       persist();
       closeEditModal();
     }
