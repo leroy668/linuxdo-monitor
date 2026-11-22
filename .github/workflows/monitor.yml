@@ -1,6 +1,8 @@
 name: Linux.do User Post Monitor
 
 on:
+  push:
+    branches: [ main ]
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
