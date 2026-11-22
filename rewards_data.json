@@ -271,18 +271,18 @@
   },
   {
     "id": "7817662",
-    "topic_id": "",
-    "site_name": "FluxionAI",
-    "full_name": "仪表盘 - FluxionAI",
-    "site_url": "https://fluxionai.space/dashboard",
-    "topic_url": "",
+    "topic_id": "3057748",
+    "site_name": "Sidrune AI",
+    "full_name": "仪表盘 - Sidrune AI (原 FluxionAI)",
+    "site_url": "https://sidrune.ai/dashboard",
+    "topic_url": "https://linux.do/t/topic/3057748",
     "item_type": "CONSOLE",
     "status": "ACTIVE",
     "my_uid": "",
     "reward_desc": "",
-    "notes": "已付费主力使用",
+    "notes": "原 FluxionAI 品牌升级；已付费主力；支持 L站 Connect 一键登录",
     "folder_source": "收藏夹栏/中转站/付钱购买",
-    "updated_at": "2026-11-22 17:00:00"
+    "updated_at": "2026-11-22 18:08:00"
   },
   {
     "id": "5968216",
