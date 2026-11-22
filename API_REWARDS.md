@@ -1,7 +1,7 @@
 # ⚡ 中转站资产全景大清查看板
 
-> **更新时间**：`2026-11-22 16:48:51`  
-> **统计概览**：总收录 `68` 个站点 ｜ 🟢 主力在用: `13` ｜ 🟡 备用有钱: `24` ｜ 🔴 待领福利: `31` ｜ ⚫ 废弃隐藏: `0`
+> **更新时间**：`2026-11-22 16:54:15`  
+> **统计概览**：总收录 `74` 个站点 ｜ 🟢 主力在用: `9` ｜ 🟡 备用有钱: `20` ｜ 🔴 待领福利: `31` ｜ ⚫ 废弃隐藏: `14`
 
 ---
 
@@ -9,10 +9,6 @@
 
 | 站点名称 | 控制台/官网链接 | 备注/剩余额度 |
 | :--- | :--- | :--- |
-| **AI Gateway** | [AI Gateway](https://gateai.cc/keys) | 控制台直达 |
-| **RollDek** | [RollDek](https://www.rolldek.com/keys) | 控制台直达 |
-| **我的贾维斯** | [我的贾维斯](https://api.aijws.com/dashboard) | 控制台直达 |
-| **万川智能** | [万川智能](https://chuanapi.com/wallet) | 控制台直达 |
 | **FluxionAI** | [FluxionAI](https://fluxionai.space/dashboard) | 控制台直达 |
 | **AIHub** | [AIHub](https://aihub.top/dashboard) | 控制台直达 |
 | **FastAI 模型** | [FastAI 模型](https://www.fastaitoken.com/dashboard) | 控制台直达 |
@@ -27,10 +23,6 @@
 
 | 站点名称 | 控制台链接 | 备注/残余额度 |
 | :--- | :--- | :--- |
-| **元流** | [元流](https://api.axis.fan/keys) | API 密钥 - 元流 |
-| **CUN.AI** | [CUN.AI](https://www.cun.ai/subscription-plans) | 备用中转站 |
-| **吉吉AI（吉吉API）｜lune** | [吉吉AI（吉吉API）｜lune](https://www.jiji.cc/) | 备用中转站 |
-| **Yeta Platform** | [Yeta Platform](https://platform.yeta.ai/) | 备用中转站 |
 | **ChatGPT JSON / Session 本地转 CPA** | [ChatGPT JSON / Session 本地转 CPA](https://gpt.learnlicen.dpdns.org/) | 备用中转站 |
 | **CLI Proxy API Management Cente** | [CLI Proxy API Management Cente](http://127.0.0.1:8317/management.html#/auth-files) | 备用中转站 |
 | **禾维 AI | API 中转站真假检测,价格对比与推荐** | [禾维 AI | API 中转站真假检测,价格对比与推荐](https://www.hvoy.ai/) | 备用中转站 |
