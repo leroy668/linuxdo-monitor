@@ -3,8 +3,9 @@ import os
 import sys
 from datetime import datetime
 
-DATA_FILE = "rewards_data.json"
-BOARD_FILE = "API_REWARDS.md"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_FILE = os.path.join(BASE_DIR, "rewards_data.json")
+BOARD_FILE = os.path.join(BASE_DIR, "API_REWARDS.md")
 
 STATUS_ACTIVE = "ACTIVE"        # 🟢 主力在用
 STATUS_STANDBY = "STANDBY"      # 🟡 备用有钱
@@ -22,7 +23,6 @@ def load_data():
             return []
 
 def save_data(data):
-    # 将旧的 DEPLETED 统一归并为 ARCHIVED 或 STANDBY
     for x in data:
         if x.get("status") == "DEPLETED":
             x["status"] = STATUS_ARCHIVED
