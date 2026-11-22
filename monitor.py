@@ -2,7 +2,7 @@ import os
 import requests
 import json
 
-TARGET_USER = os.getenv("TARGET_USER", "neo")
+TARGET_USER = os.getenv("TARGET_USER", "Andrew-hh")
 FEISHU_WEBHOOK = os.getenv("FEISHU_WEBHOOK")
 STATE_FILE = "seen_ids.txt"
 

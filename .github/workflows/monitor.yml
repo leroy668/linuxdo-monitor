@@ -30,7 +30,7 @@ jobs:
       - name: Run Monitor Script
         env:
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
-          TARGET_USER: ${{ secrets.TARGET_USER || 'neo' }}
+          TARGET_USER: ${{ secrets.TARGET_USER || 'Andrew-hh' }}
         run: python monitor.py
 
       - name: Commit and push state
